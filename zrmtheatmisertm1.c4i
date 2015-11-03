@@ -4,37 +4,33 @@
    <creator>Andy Loughran</creator>
    <created>02/11/2015 20:00</created>
    <modified>02/11/2015 20:00</modified>
+     <driver>DriverWorks</driver>
+    <combo>true</combo>
    <name>Heatmiser-tm1</name>
    <model>TM1-N</model>
-   <version>1</version>
-   <small></small>
-   <large></large>
+   <version>3</version>
+   <proxy>zrmtheatmisertm1</proxy>
+  <small>devices_sm/C4.gif</small>
+  <large>devices_lg/C4.gif</large>
    <control>lua_gen</control>
    <front/><back/><top/><bottom/><left/><right/>
  <properties>
-    <property>
-      <name>Thermostat ID</name>
-      <type>RANGED_INTEGER</type>
-      <minimum>1</minimum>
-      <maximum>32</maximum>
-      <default>1</default>
-    </property>
-  </properties><commands>
-    <command>
-      <name>HOT_WATER_ON</name>
-      <description>Hot Water On on NAME</description>
-    </command>
-    <command>
-      <name>HOT_WATER_AUTO</name>
-      <description>Hot Water Auto (Follow schedule) on NAME</description>
-    </command>
-    <command>
-      <name>HOT_WATER_OFF</name>
-      <description>Hot Water Off on NAME</description>
-    </command>
-  </commands>
-      
+    <property>      
+        <name>Thermostat ID</name>
+        <type>DEVICE_SELECTOR</type>
+        <items>
+          <item>control4_thermostat_proxy.c4i</item>
+        </items>
+        <multiselect>false</multiselect>
+      </property>
+  </properties>      
+  
+  <composer_categories />
+  <capabilities />
+  <connections />
+  <config>
 <script>
+    <![CDATA[
 HMV2_ID = 2
 HMV3_ID = 3
 BYTEMASK = 0xff
@@ -778,6 +774,7 @@ end
 
 --print(hotWaterSwitch(5,HOT_WATER_ON_VAL))
   
+  ]]>
       </script>
    </config>
 </devicedata>
