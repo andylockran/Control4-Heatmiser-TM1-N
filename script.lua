@@ -9,8 +9,8 @@ MASTER_ADDR_MAX = 0xa0
 -- Define magic numbers used in messages
 FUNC_READ  = 0
 FUNC_WRITE = 1
-
 BROADCAST_ADDR = 0xff
+
 RW_LENGTH_ALL = 0xffff
 
 HOT_WATER_ADDR_VAL = 42
@@ -23,14 +23,6 @@ MY_MASTER_ADDR = 0x81
   --              GLOBALS
   -- ===================================
 g_SerialData = ""
-
--- Commands that are commented out are not supported.
-CMDS = 
-{
-  ["HOT_WATER_ON"]        = "bo",
-  ["HOT_WATER_AUTO"]      = "bo",
-  ["HOT_WATER_OFF"]       = "bo",
-}
 
 local hex2bin = {
   ["0"] = "0000",
@@ -583,6 +575,33 @@ function DEC_HEX(IN)
     return OUT
 end
 
+function hex_dump (str)
+    local len = string.len( str )
+    local dump = ""
+    local hex = ""
+    local asc = ""
+    
+    for i = 1, len do
+        if 1 == i % 8 then
+            dump = dump .. hex .. asc .. "\n"
+            hex = string.format( "%04x: ", i - 1 )
+            asc = ""
+        end
+        
+        local ord = string.byte( str, i )
+        hex = hex .. string.format( "%02x ", ord )
+        if ord >= 32 and ord <= 126 then
+            asc = asc .. string.char( ord )
+        else
+            asc = asc .. "."
+        end
+    end
+
+    
+    return dump .. hex
+            .. string.rep( "   ", 8 - len % 8 ) .. asc
+end
+
 crc16 = {}
 crc16.__index = crc16
 
@@ -666,7 +685,7 @@ crc = crc16.new()
 
 
 function hmFormMsg(destination,source,functioncall,start,payload)
-  print("hmFormMsg:            ",destination,source,functioncall,start,payload)
+  --print("hmFormMsg:            ",destination,source,functioncall,start,payload)
   start_low = bitand(start,BYTEMASK)
   start_high = bitand(rsh(start,8),BYTEMASK)
   payloadstring = tostring(payload)
@@ -695,7 +714,7 @@ function hmFormMsgCRC(destination, source, functioncall, start, payload)
   --Forms a message payload, including CRC"""
   --print("hmFormMsgCRC:         ", destination,source, functioncall, start, payload)
   data = hmFormMsg(destination, source, functioncall, start, payload)
-  print("Payload data: ", data)
+  --print("Payload data: ", data)
   newdata = crc:run(data)
   --crc:run(data)
   return data
@@ -712,21 +731,46 @@ function hmVerifyMsgCRCOK(source, expectedFunction, expectedLength, datal)
 end
 
 function hmSendMsg(message)
-  print(message)
+  --print(message)
   data2 = {}
   for k,v in ipairs(message) do
-    table.insert(data2,(DEC_HEX(v)))
+    --ord = string.byte(v,k)
+    --hex = hex .. string.format( "%02x ", ord )
+
+    -- Need to insert the value as a hex value ( think)
+    v = string.char(v)
+    table.insert(data2,v)
+    --print(DEC_HEX(v))
   end
-  print("Final",table.concat(data2))
-  --written = C4:SendToSerial(1, message)
+  --print("Final",table.concat(data2))
+  --print("hex:",hex_dump(table.concat(data2)))
+  C4:SendToSerial(1, data2)
   --byteread = ReceivedFromSerial(1, strData)
+  return 1
 end
 
 function hotWaterSwitch(destination,payload)
-  print("hotWaterSwitch: ",destination,MY_MASTER_ADDR,FUNC_WRITE,HOT_WATER_ADDR_VAL,payload)
+  --print("hotWaterSwitch: ",destination,MY_MASTER_ADDR,FUNC_WRITE,HOT_WATER_ADDR_VAL,payload)
   msg = hmFormMsgCRC(destination,MY_MASTER_ADDR,FUNC_WRITE,HOT_WATER_ADDR_VAL,payload)
-  print("Post receive:", table.concat(msg,", "))
-  hmSendMsg(msg)
+  if hmSendMsg(msg) == 1 then
+    C4:UpdateProperty('State', 'On')
+  else
+    print("Error updating hot water status")
+  end
+end
+
+function OnPropertyChanged(strProperty)
+  if (strProperty == 'State') then
+    if (Properties[strProperty]=='SwitchOn') then
+      print("Turning Hot Water On")
+      hotWaterSwitch(Properties['ThermostatID'],HOT_WATER_ON_VAL)
+    elseif (Properties[strProperty]=='SwitchOff') then
+      print("Turning Hot Water to Auto")
+      hotWaterSwitch(Properties['ThermostatID'],HOT_WATER_OFF_VAL)
+    end
+  else
+    print("Status is: ",Propertises['State'],".  Contact andy")
+  end
 end
 
 --function LUA_ACTION.hotWaterOnPlease()
@@ -740,3 +784,4 @@ end
 --end
 
 --print(hotWaterSwitch(5,HOT_WATER_ON_VAL))
+  

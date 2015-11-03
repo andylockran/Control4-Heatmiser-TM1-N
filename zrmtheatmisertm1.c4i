@@ -707,7 +707,7 @@ crc = crc16.new()
 
 
 function hmFormMsg(destination,source,functioncall,start,payload)
-  print("hmFormMsg:            ",destination,source,functioncall,start,payload)
+  --print("hmFormMsg:            ",destination,source,functioncall,start,payload)
   start_low = bitand(start,BYTEMASK)
   start_high = bitand(rsh(start,8),BYTEMASK)
   payloadstring = tostring(payload)
@@ -736,7 +736,7 @@ function hmFormMsgCRC(destination, source, functioncall, start, payload)
   --Forms a message payload, including CRC"""
   --print("hmFormMsgCRC:         ", destination,source, functioncall, start, payload)
   data = hmFormMsg(destination, source, functioncall, start, payload)
-  print("Payload data: ", data)
+  --print("Payload data: ", data)
   newdata = crc:run(data)
   --crc:run(data)
   return data
@@ -753,26 +753,46 @@ function hmVerifyMsgCRCOK(source, expectedFunction, expectedLength, datal)
 end
 
 function hmSendMsg(message)
-  print(message)
+  --print(message)
   data2 = {}
   for k,v in ipairs(message) do
     --ord = string.byte(v,k)
     --hex = hex .. string.format( "%02x ", ord )
 
     -- Need to insert the value as a hex value ( think)
+    v = string.char(v)
     table.insert(data2,v)
+    --print(DEC_HEX(v))
   end
-  print("Final",table.concat(data2))
-  print(hex_dump(table.concat(data2)))
-  --written = C4:SendToSerial(1, message)
+  --print("Final",table.concat(data2))
+  --print("hex:",hex_dump(table.concat(data2)))
+  C4:SendToSerial(1, data2)
   --byteread = ReceivedFromSerial(1, strData)
+  return 1
 end
 
 function hotWaterSwitch(destination,payload)
-  print("hotWaterSwitch: ",destination,MY_MASTER_ADDR,FUNC_WRITE,HOT_WATER_ADDR_VAL,payload)
+  --print("hotWaterSwitch: ",destination,MY_MASTER_ADDR,FUNC_WRITE,HOT_WATER_ADDR_VAL,payload)
   msg = hmFormMsgCRC(destination,MY_MASTER_ADDR,FUNC_WRITE,HOT_WATER_ADDR_VAL,payload)
-  print("Post receive:", table.concat(msg,", "))
-  hmSendMsg(msg)
+  if hmSendMsg(msg) == 1 then
+    C4:UpdateProperty('State', 'On')
+  else
+    print("Error updating hot water status")
+  end
+end
+
+function OnPropertyChanged(strProperty)
+  if (strProperty == 'State') then
+    if (Properties[strProperty]=='SwitchOn') then
+      print("Turning Hot Water On")
+      hotWaterSwitch(Properties['ThermostatID'],HOT_WATER_ON_VAL)
+    elseif (Properties[strProperty]=='SwitchOff') then
+      print("Turning Hot Water to Auto")
+      hotWaterSwitch(Properties['ThermostatID'],HOT_WATER_OFF_VAL)
+    end
+  else
+    print("Status is: ",Propertises['State'],".  Contact andy")
+  end
 end
 
 --function LUA_ACTION.hotWaterOnPlease()
