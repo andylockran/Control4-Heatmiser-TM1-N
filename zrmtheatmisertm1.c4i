@@ -8,23 +8,12 @@
     <combo>true</combo>
    <name>Heatmiser-tm1</name>
    <model>TM1-N</model>
-   <version>3</version>
+   <version>6</version>
    <proxy>zrmtheatmisertm1</proxy>
   <small>devices_sm/C4.gif</small>
   <large>devices_lg/C4.gif</large>
    <control>lua_gen</control>
    <front/><back/><top/><bottom/><left/><right/>
- <properties>
-    <property>      
-        <name>Thermostat ID</name>
-        <type>DEVICE_SELECTOR</type>
-        <items>
-          <item>control4_thermostat_proxy.c4i</item>
-        </items>
-        <multiselect>false</multiselect>
-      </property>
-  </properties>      
-  
   <composer_categories />
   <capabilities />
   <connections />
@@ -42,8 +31,8 @@ MASTER_ADDR_MAX = 0xa0
 -- Define magic numbers used in messages
 FUNC_READ  = 0
 FUNC_WRITE = 1
-
 BROADCAST_ADDR = 0xff
+
 RW_LENGTH_ALL = 0xffff
 
 HOT_WATER_ADDR_VAL = 42
@@ -56,14 +45,6 @@ MY_MASTER_ADDR = 0x81
   --              GLOBALS
   -- ===================================
 g_SerialData = ""
-
--- Commands that are commented out are not supported.
-CMDS = 
-{
-  ["HOT_WATER_ON"]        = "bo",
-  ["HOT_WATER_AUTO"]      = "bo",
-  ["HOT_WATER_OFF"]       = "bo",
-}
 
 local hex2bin = {
   ["0"] = "0000",
@@ -616,6 +597,33 @@ function DEC_HEX(IN)
     return OUT
 end
 
+function hex_dump (str)
+    local len = string.len( str )
+    local dump = ""
+    local hex = ""
+    local asc = ""
+    
+    for i = 1, len do
+        if 1 == i % 8 then
+            dump = dump .. hex .. asc .. "\n"
+            hex = string.format( "%04x: ", i - 1 )
+            asc = ""
+        end
+        
+        local ord = string.byte( str, i )
+        hex = hex .. string.format( "%02x ", ord )
+        if ord >= 32 and ord <= 126 then
+            asc = asc .. string.char( ord )
+        else
+            asc = asc .. "."
+        end
+    end
+
+    
+    return dump .. hex
+            .. string.rep( "   ", 8 - len % 8 ) .. asc
+end
+
 crc16 = {}
 crc16.__index = crc16
 
@@ -748,9 +756,14 @@ function hmSendMsg(message)
   print(message)
   data2 = {}
   for k,v in ipairs(message) do
-    table.insert(data2,(DEC_HEX(v)))
+    --ord = string.byte(v,k)
+    --hex = hex .. string.format( "%02x ", ord )
+
+    -- Need to insert the value as a hex value ( think)
+    table.insert(data2,v)
   end
   print("Final",table.concat(data2))
+  print(hex_dump(table.concat(data2)))
   --written = C4:SendToSerial(1, message)
   --byteread = ReceivedFromSerial(1, strData)
 end
@@ -776,5 +789,23 @@ end
   
   ]]>
       </script>
+       <properties>
+    <property>      
+        <name>ThermostatID</name>
+        <type>STRING</type>
+        <default>off</default>
+      </property>
+      <property>
+        <name>State</name>
+          <type>LIST</type>
+          <items>
+            <item>On</item>
+            <item>Off</item>
+          </items>
+        <default>No</default>
+        <readonly>false</readonly>
+      </property>
+  </properties>      
+  
    </config>
 </devicedata>
