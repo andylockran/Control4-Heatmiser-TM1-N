@@ -11,20 +11,6 @@
    <large></large>
    <control>lua_gen</control>
    <front/><back/><top/><bottom/><left/><right/>
-   <capabilities>
-      <has_blinds>True</has_blinds>
-      <can_stop_blinds>False</can_stop_blinds>
-      <can_stop>False</can_stop>
-      <midpoints>7</midpoints>
-      <blinds_preset_count>3</blinds_preset_count>
-      <can_designate_level>False</can_designate_level>
-      <can_designate_blinds_level>False</can_designate_blinds_level>
-      <has_louvers>False</has_louvers>
-      <can_stop_louvers>False</can_stop_louvers>
-      <louvers_preset_count>0</louvers_preset_count>
-      <can_designate_louvers_level>False</can_designate_louvers_level>
-      <use_v2_proxy>True</use_v2_proxy>
-   </capabilities>
  <properties>
     <property>
       <name>Thermostat ID</name>
