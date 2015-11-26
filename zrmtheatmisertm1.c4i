@@ -8,7 +8,7 @@
     <combo>true</combo>
    <name>Heatmiser-tm1</name>
    <model>TM1-N</model>
-   <version>33</version>
+   <version>36</version>
    <proxy>zrmtheatmisertm1</proxy>
   <small>devices_sm/C4.gif</small>
   <large>devices_lg/C4.gif</large>
@@ -701,6 +701,8 @@ end
 
 function crc16:CRC16_Update(val)
   print("Value:",val)
+  val = tonumber(val)
+  print(type(val2))
   print("updating 1")
   self:Update4Bits(rsh(val,4))
   print("updating 1 complete. updating 2")
@@ -725,11 +727,6 @@ function crc16:run(message)
   print("crc:run complete")
   return msg
 end
-
--- Testing the functionality below:
---crc = crc16.new()
---andy = crc:run(1212121121212)
---print(andy[1],andy[2])
 
 crc = crc16.new()
 
@@ -812,7 +809,6 @@ function ReceivedFromSerial(idBinding, strData)
 end
 
 function hmSendMsg(message)
-    Dbg:OutputPrint('hex_dump(message)')
   data2 = {}
   for k,v in ipairs(message) do
     -- Need to insert the value as a chr value
@@ -820,11 +816,13 @@ function hmSendMsg(message)
     table.insert(data2,v)
   end
   cmd = table.concat(data2) ..'\r'
+  Dbg:OutputPrint(hex_dump(cmd))
+  print(type(cmd))
   C4:SendToSerial(1, cmd)
-  Dbg:OutputPrint('C4:SendToSerial(1, cmd')
+  Dbg:OutputPrint('C4:SendToSerial(1, cmd)')
   print "data sent to serial"
-  ReceivedFromSerial(1,strData)
-  Dbg:OutputPrint(ReceivedFromSerial(1,strData))
+  --ReceivedFromSerial(1,strData)
+  --Dbg:OutputPrint(ReceivedFromSerial(1,strData))
   return 1
 end
 
@@ -844,7 +842,8 @@ function LUA_ACTION.hotWaterTimedPlease()
   hotWaterSwitch(Properties['ThermostatID'],HOT_WATER_AUTO_VAL)
 end
 
---print(hotWaterSwitch("5,HOT_WATER_ON_VAL))
+
+--hotWaterSwitch(5,HOT_WATER_ON_VAL)
   
   ]]>
       </script>
